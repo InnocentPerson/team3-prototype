@@ -26,6 +26,12 @@ export default function Navbar() {
             {/* Desktop Menu */}
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
+                href="/dashboard"
+                className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-white"
+              >
+                Dashboard
+              </Link>
+              <Link
                 href="/permutation"
                 className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-white"
               >
@@ -54,12 +60,6 @@ export default function Navbar() {
             >
               Login
             </Link>
-            {/* <Link
-              href="/signup"
-              className="ml-4 px-3 py-2 rounded-md text-sm font-medium hover:bg-[#8e4e18]"
-            >
-              Signup
-            </Link> */}
           </div>
 
           {/* Mobile Menu Button */}
@@ -108,6 +108,12 @@ export default function Navbar() {
         <div className="sm:hidden" id="mobile-menu">
           <div className="pt-2 pb-3 space-y-1">
             <Link
+              href="/dashboard"
+              className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium hover:bg-[#8e4e18] hover:border-white"
+            >
+              Dashboard
+            </Link>
+            <Link
               href="/permutation"
               className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium hover:bg-[#8e4e18] hover:border-white"
             >
@@ -133,12 +139,6 @@ export default function Navbar() {
             >
               Login
             </Link>
-            {/* <Link
-              href="/signup"
-              className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium hover:bg-[#8e4e18] hover:border-white"
-            >
-              Signup
-            </Link> */}
           </div>
         </div>
       )}
