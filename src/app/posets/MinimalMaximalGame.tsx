@@ -23,6 +23,24 @@ const QUESTIONS: MinimalMaximalQuestion[] = [
     correctMaximal: [8],
     description: "1 < 2, 2 < 4, 4 < 8",
   },
+  {
+    elements: [1, 2, 3, 4, 5],
+    correctMinimal: [1, 2],
+    correctMaximal: [5],
+    description: "1 < 3, 2 < 4, 3 < 5, 4 < 5",
+  },
+  {
+    elements: [1, 2, 3, 4, 5],
+    correctMinimal: [1],
+    correctMaximal: [4, 5],
+    description: "1 < 2, 1 < 3, 2 < 4, 3 < 5, 2 < 5",
+  },
+  {
+    elements: [1, 2, 3, 4, 5, 6],
+    correctMinimal: [1],
+    correctMaximal: [4, 6],
+    description: "1 < 2, 1 < 3, 2 < 4, 2 < 5, 3 < 5, 5 < 6",
+  },
 ];
 
 export default function MinimalMaximalGame() {

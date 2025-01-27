@@ -26,7 +26,29 @@ const QUESTIONS: BoundsQuestion[] = [
     correctGLB: 2,
     relation: "divides (x divides y)",
   },
+  {
+    set: [1, 2, 3, 4, 5, 6],
+    subset: [3, 5],
+    correctLUB: 5,
+    correctGLB: 3,
+    relation: "less than or equal to (≤)",
+  },
+  {
+    set: [10, 20, 30, 40, 50],
+    subset: [20, 30, 40],
+    correctLUB: 40,
+    correctGLB: 20,
+    relation: "less than or equal to (≤)",
+  },
+  {
+    set: [2, 4, 6, 8, 12, 16],
+    subset: [4, 8],
+    correctLUB: 16,
+    correctGLB: 4,
+    relation: "divides (x divides y)",
+  },
 ];
+
 
 export default function UpperLowerBoundsGame() {
   const [currentIndex, setCurrentIndex] = useState(0);
