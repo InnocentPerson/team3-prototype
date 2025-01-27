@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+"use client";
+
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface Question {
   id: number;
   question: string;
-  diagram?: string; 
+  diagram?: string;
   options: string[];
   correctAnswer: string;
   explanation: string;
@@ -56,7 +58,7 @@ const questions: Question[] = [
     explanation:
       "The lattice has both a greatest element (1) and a least element (0), which makes it a bounded lattice.",
   },
-  // Previous questions
+  // Additional non-diagram questions
   {
     id: 6,
     question: "Which of the following is a lattice?",
@@ -114,66 +116,150 @@ const questions: Question[] = [
   },
 ];
 
-const LatticesQuizGame: React.FC = () => {
+export default function LatticesQuizGame() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
+
   const [selectedOption, setSelectedOption] = useState("");
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<null | boolean>(null);
+  // If user has already answered a question correctly, no further increment in score
+  const [questionAnswered, setQuestionAnswered] = useState(false);
+
+  // Once quizOver is true, we show the final results section
+  const [quizOver, setQuizOver] = useState(false);
+
   const router = useRouter();
+  const currentQuestion = questions[currentQuestionIndex];
 
   const handleOptionClick = (option: string) => {
-    setSelectedOption(option);
-    const isCorrect = option === questions[currentQuestionIndex].correctAnswer;
-    setIsAnswerCorrect(isCorrect);
-    if (isCorrect) setScore((prev) => prev + 1);
-  };
+    // If user already answered correctly, do nothing
+    if (questionAnswered || quizOver) return;
 
-  const handleNextQuestion = () => {
-    setSelectedOption("");
-    setIsAnswerCorrect(null);
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-    } else {
-      router.push("/lattices/quiz-results"); // Navigate to results page
+    setSelectedOption(option);
+    const isCorrect = option === currentQuestion.correctAnswer;
+    setIsAnswerCorrect(isCorrect);
+
+    if (isCorrect) {
+      setScore((prev) => prev + 1);
+      setQuestionAnswered(true);
     }
   };
 
+  const handleNextQuestion = () => {
+    // Move on to next question, or end quiz
+    setSelectedOption("");
+    setIsAnswerCorrect(null);
+    setQuestionAnswered(false);
+
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    } else {
+      // Quiz is finished
+      setQuizOver(true);
+    }
+  };
+
+  const handleRestartQuiz = () => {
+    // Reset all states
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setSelectedOption("");
+    setIsAnswerCorrect(null);
+    setQuestionAnswered(false);
+    setQuizOver(false);
+  };
+
+  const handleReturnHome = () => {
+    router.push("/"); // or your home route
+  };
+
+  // =================== RENDER FINAL RESULTS ===================
+  if (quizOver) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-b from-[#96a86c] to-[#5c6b47]">
+        <div className="w-full max-w-md bg-[#f7f2d8] p-6 rounded-lg shadow-lg flex flex-col items-center">
+          <h1 className="text-2xl font-extrabold text-[#a65c1c] mb-6 text-center">
+            Quiz Completed!
+          </h1>
+          <p className="text-black text-lg mb-4">
+            Your final score is <span className="font-bold">{score}</span> out of{" "}
+            {questions.length}.
+          </p>
+          <div className="flex gap-4">
+            <button
+              onClick={handleRestartQuiz}
+              className="px-4 py-2 bg-[#a65c1c] text-white rounded hover:bg-[#8e4e18]"
+            >
+              Restart Quiz
+            </button>
+            <button
+              onClick={handleReturnHome}
+              className="px-4 py-2 bg-[#a65c1c] text-white rounded hover:bg-[#8e4e18]"
+            >
+              Return Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =================== RENDER QUIZ QUESTIONS ===================
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Lattices Quiz Game</h1>
-      <div className="w-full max-w-md p-6 bg-white rounded-lg shadow">
-        <h2 className="text-xl font-semibold">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-b from-[#96a86c] to-[#5c6b47]">
+      <div className="w-full max-w-2xl bg-[#f7f2d8] rounded-lg shadow-lg p-6">
+        {/* Header Row: Title + Score */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-extrabold text-[#a65c1c]">
+            Lattices Quiz
+          </h1>
+          <p className="text-[#a65c1c] font-bold">
+            Score: {score}
+          </p>
+        </div>
+
+        {/* Question Number & Text */}
+        <h2 className="text-lg font-semibold text-[#a65c1c]">
           Question {currentQuestionIndex + 1} of {questions.length}
         </h2>
-        <p className="mt-2 text-gray-700">{questions[currentQuestionIndex].question}</p>
-        {/* Display lattice diagram if available */}
-        {questions[currentQuestionIndex].diagram && (
-          <div className="mt-4">
+        <p className="mt-2 text-black">{currentQuestion.question}</p>
+
+        {/* Optional diagram */}
+        {currentQuestion.diagram && (
+          <div className="mt-4 max-h-48 flex justify-center">
             <img
-              src={questions[currentQuestionIndex].diagram}
+              src={currentQuestion.diagram}
               alt="Lattice diagram"
-              className="w-full h-auto rounded-lg shadow-md"
+              className="object-contain rounded-lg w-full max-w-sm"
             />
           </div>
         )}
+
+        {/* Options */}
         <div className="mt-4 space-y-2">
-          {questions[currentQuestionIndex].options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => handleOptionClick(option)}
-              className={`w-full py-2 px-4 rounded-lg text-left ${
-                selectedOption === option
-                  ? option === questions[currentQuestionIndex].correctAnswer
-                    ? "bg-green-500 text-white"
-                    : "bg-red-500 text-white"
-                  : "bg-gray-100 hover:bg-gray-200"
-              }`}
-              disabled={selectedOption !== ""}
-            >
-              {option}
-            </button>
-          ))}
+          {currentQuestion.options.map((option, index) => {
+            let btnStyle = "bg-gray-100 hover:bg-gray-200 text-black";
+            if (selectedOption === option) {
+              if (option === currentQuestion.correctAnswer) {
+                btnStyle = "bg-green-500 text-white";
+              } else {
+                btnStyle = "bg-red-500 text-white";
+              }
+            }
+            return (
+              <button
+                key={index}
+                onClick={() => handleOptionClick(option)}
+                className={`w-full py-2 px-4 rounded-lg text-left transition-colors ${btnStyle}`}
+                disabled={selectedOption !== ""} // disable once a choice is made
+              >
+                {option}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Feedback */}
         {isAnswerCorrect !== null && (
           <div className="mt-4">
             <p
@@ -183,20 +269,19 @@ const LatticesQuizGame: React.FC = () => {
             >
               {isAnswerCorrect ? "Correct!" : "Incorrect."}
             </p>
-            <p className="mt-2 text-gray-700">{questions[currentQuestionIndex].explanation}</p>
+            <p className="mt-2 text-black">{currentQuestion.explanation}</p>
           </div>
         )}
+
+        {/* Next Button */}
         <button
           onClick={handleNextQuestion}
           disabled={selectedOption === ""}
-          className="mt-4 py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
+          className="mt-4 py-2 px-4 bg-[#a65c1c] text-white rounded-lg hover:bg-[#8e4e18] disabled:bg-gray-300"
         >
-          {currentQuestionIndex < questions.length - 1 ? "Next Question" : "View Results"}
+          {currentQuestionIndex < questions.length - 1 ? "Next Question" : "Finish Quiz"}
         </button>
       </div>
-      <p className="mt-6 text-gray-600">Score: {score}</p>
     </div>
   );
-};
-
-export default LatticesQuizGame;
+}
