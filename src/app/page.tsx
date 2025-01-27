@@ -17,7 +17,7 @@ export default function Home() {
             </h1>
 
             {/* Subtitle Section */}
-            <p className="text-2xl text-[#e4c3a4] mb-8 jockey-one-regular drop-shadow-md tracking-wide">
+            <p className="text-2xl text-[#e4c3a4] mb-8 jockey-one-regular drop-shadow-md tracking-wider">
               Emphasizing your learning experience of{" "}
               <span className="text-orange-500">
                 Lattices and Posets
@@ -27,8 +27,8 @@ export default function Home() {
             </p>
 
             {/* CTA Button */}
-            <button className="bg-[#a65c1c] hover:bg-[#8e4e18] text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg jersey-10-regular tracking-wide">
-              <Link href="/login">GET STARTED</Link>
+            <button className="bg-[#a65c1c] hover:bg-[#8e4e18] text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg jersey-10-regular tracking-wider">
+              <Link href="/dashboard">GET STARTED</Link>
             </button>
           </div>
         </div>
