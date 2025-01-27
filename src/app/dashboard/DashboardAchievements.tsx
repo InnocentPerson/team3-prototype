@@ -1,6 +1,6 @@
 export default function DashboardAchievements() {
     return (
-      <div className="bg-white shadow-md rounded-lg p-6 mt-6">
+      <div className="bg-[#f7f2d8] shadow-md rounded-lg p-6 mt-6">
         <h2 className="text-lg font-bold text-gray-800">Recent Achievements</h2>
         <ul className="mt-4 space-y-2">
           <li className="flex items-center">
