@@ -13,8 +13,10 @@ const SignupPage = () => {
     if (loading) return; // Prevent multiple submissions while loading
     setLoading(true); // Set loading state
 
-    // Generate a random auth_token (for simplicity, this can be replaced with an actual token generation mechanism)
-    const auth_token = Math.random().toString(36).substring(2);
+    // access auth_token from .env
+    // const AUTH_TOKEN = process.env.AUTH_TOKEN;
+    // console.log(AUTH_TOKEN);
+    const AUTH_TOKEN = "2eb3c12348258d673eb1514c92fe20dfe533cc0ad7863520444b5300072a91da";
 
     try {
       const response = await fetch("/signup", {
@@ -22,7 +24,7 @@ const SignupPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ auth_token, name, email, password, role }),
+        body: JSON.stringify({ AUTH_TOKEN, name, email, password }), // ,role removed for now
       });
 
       if (response.ok) {
@@ -41,7 +43,7 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-green-950 to-yellow-100 flex items-center justify-center p-6 relative">
+    <div className="min-h-screen flex items-center justify-center p-6 relative">
       {/* Background Icons */}
       <div className="absolute inset-0 bg-[url('/icons/hexagon.svg')] bg-repeat opacity-10"></div>
       <div className="absolute inset-0 bg-[url('/icons/poset.svg')] bg-repeat opacity-10"></div>
@@ -98,7 +100,7 @@ const SignupPage = () => {
         </svg>
       </div>
 
-      <div className="w-full max-w-md bg-[#F5F5DC] rounded-lg shadow-lg p-8 space-y-6 relative z-10">
+      <div className="w-full max-w-md bg-[#f7f2d8] rounded-lg shadow-lg p-8 space-y-6 relative z-10">
         {/* Tabs for Role Selection */}
         <div className="flex justify-between mb-4">
           {["admin", "professor", "student"].map((r) => (
@@ -107,8 +109,8 @@ const SignupPage = () => {
               onClick={() => setRole(r)}
               className={`w-1/3 py-2 text-center text-lg font-bold ${
                 role === r
-                  ? "bg-orange-600 text-white border-2 border-white font-['Jersey_10']"
-                  : "bg-transparent text-orange-600 font-['Jersey_10'] border-2 border-white"
+                  ? "bg-[#8e4e18] text-white border-2 border-white font-['Jersey_10']"
+                  : "bg-transparent text-[#8e4e18] font-['Jersey_10'] border-2 border-white"
               } transition-all duration-300`}
             >
               {r.charAt(0).toUpperCase() + r.slice(1)}
@@ -117,10 +119,7 @@ const SignupPage = () => {
         </div>
 
         <h1
-          className="text-center text-orange-400 text-3xl font-['Jersey_10'] font-bold"
-          style={{
-            textShadow: '1px 0px 0px #000, -1px 0px 0px #000, 1px 0px 0px #000, -1px 0px 0px #000',
-          }}
+          className="text-center text-[#8e4e18] text-4xl font-['Jersey_10'] font-bold tracking-wider drop-shadow-lg"
         >
           Discrete Mathematical Structures
         </h1>

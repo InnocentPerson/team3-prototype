@@ -31,7 +31,7 @@ const AuthForm = ({ onSubmit, buttonText }: AuthFormProps) => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
+          className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8e4e18] bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
         />
       </div>
 
@@ -44,7 +44,7 @@ const AuthForm = ({ onSubmit, buttonText }: AuthFormProps) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
+          className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8e4e18] bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
         />
       </div>
 
@@ -57,14 +57,14 @@ const AuthForm = ({ onSubmit, buttonText }: AuthFormProps) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
+          className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8e4e18] bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
         />
       </div>
 
       {/* Submit Button */}
       <button
         type="submit"
-        className="w-full py-2 bg-orange-600 text-white rounded-lg shadow-md hover:bg-orange-700 font-['Jersey_10'] focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+        className="w-full py-2 bg-[#a65c1c] text-white rounded-lg shadow-md hover:bg-[#8e4e18] font-['Jersey_10'] focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
       >
         {buttonText}
       </button>

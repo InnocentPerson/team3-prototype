@@ -24,6 +24,7 @@ export const logoutUser = async (email: string, auth_token: string) => {
       email,
       auth_token,
     });
+    console.log("Logout response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Logout error:", error);
@@ -40,6 +41,7 @@ export const signupUser = async (name: string, email: string, password: string, 
       password,
       auth_token,
     });
+    console.log("Signup response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Signup error:", error);

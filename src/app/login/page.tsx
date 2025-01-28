@@ -15,8 +15,9 @@ const LoginPage = () => {
 
     if (email && password && role) {
       try {
-        const response = await loginUser(email, password, ""); // Passing email, password, and empty auth_token
-
+        const response = await loginUser(email, password, "2eb3c12348258d673eb1514c92fe20dfe533cc0ad7863520444b5300072a91da"); // Passing email, password, and empty auth_token
+        // console.log(env.AUTH_TOKEN)
+        console.log("Login response:", response);
         if (response.token) {
           alert("Login successful");
           // Store the JWT token in localStorage or state
@@ -26,7 +27,7 @@ const LoginPage = () => {
           alert("Login failed: " + (response.message || "Unknown error"));
         }
       } catch (error) {
-        console.error("Login error:", error);
+        console.log("Login error:", error);
         alert("Something went wrong. Please try again.");
       }
     } else {
@@ -35,7 +36,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-green-950 to-yellow-100 flex items-center justify-center p-6 relative">
+    <div className="min-h-screen flex items-center justify-center p-6 relative">
       {/* Background Icons */}
       <div className="absolute inset-0 bg-[url('/icons/hexagon.svg')] bg-repeat opacity-10"></div>
       <div className="absolute inset-0 bg-[url('/icons/poset.svg')] bg-repeat opacity-10"></div>
@@ -109,7 +110,7 @@ const LoginPage = () => {
         </svg>
       </div>
 
-      <div className="w-full max-w-md bg-[#F5F5DC] rounded-lg shadow-lg p-8 space-y-6 relative z-10">
+      <div className="w-full max-w-md bg-[#f7f2d8] rounded-lg shadow-lg p-8 space-y-6 relative z-10">
         {/* Tabs for Role Selection */}
         <div className="flex justify-between mb-4">
           {["admin", "professor", "student"].map((r) => (
@@ -118,8 +119,8 @@ const LoginPage = () => {
               onClick={() => setRole(r)}
               className={`w-1/3 py-2 text-center text-lg font-bold ${
                 role === r
-                  ? "bg-orange-600 text-white border-2 border-white font-['Jersey_10']"
-                  : "bg-transparent text-orange-600 font-['Jersey_10'] border-2 border-white"
+                  ? "bg-[#a65c1c] text-white border-2 border-white font-['Jersey_10']"
+                  : "bg-transparent text-[#a65c1c] font-['Jersey_10'] border-2 border-white"
               } transition-all duration-300`}
             >
               {r.charAt(0).toUpperCase() + r.slice(1)}
@@ -128,10 +129,8 @@ const LoginPage = () => {
         </div>
 
         <h1
-          className="text-center text-orange-400 text-3xl font-['Jersey_10'] font-bold"
-          style={{
-            textShadow: '1px 0px 0px #000, -1px 0px 0px #000, 1px 0px 0px #000, -1px 0px 0px #000',
-          }}
+          className="text-center text-[#a65c1c] text-4xl jersey-10-regular font-bold drop-shadow-md"
+          
         >
           Discrete Mathematical Structures
         </h1>
@@ -147,7 +146,7 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
+              className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8e4e18] bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
             />
           </div>
 
@@ -160,14 +159,14 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
+              className="w-full px-4 py-2 mt-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8e4e18] bg-gray-200 font-['Jersey_10'] text-gray-600 font-bold"
             />
           </div>
 
           {/* Login Button */}
           <button
             type="submit"
-            className="w-full py-2 bg-orange-600 text-white rounded-lg shadow-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 font-['Jersey_10'] font-bold transition-all duration-300"
+            className="w-full py-2 bg-[#a65c1c] text-white rounded-lg shadow-md hover:bg-[#8e4e18] focus:outline-none focus:ring-2 focus:ring-[#8e4e18] font-['Jersey_10'] font-bold transition-all duration-300"
           >
             Login
           </button>
@@ -175,15 +174,15 @@ const LoginPage = () => {
 
         {/* Divider and Create Account Link */}
         <div className="flex items-center justify-between my-4">
-          <span className="w-1/3 border-b border-orange-300"></span>
-          <span className="text-orange-600 text-sm font-['Jersey_10'] font-bold">OR</span>
-          <span className="w-1/3 border-b border-orange-300"></span>
+          <span className="w-1/3 border-b border-[#8e4e18]"></span>
+          <span className="text-[#8e4e18] text-sm font-['Jersey_10'] font-bold">OR</span>
+          <span className="w-1/3 border-b border-[#8e4e18]"></span>
         </div>
 
         {/* Create Account Button */}
         <div className="flex justify-center">
           <button
-            className="py-2 px-6 bg-orange-600 text-white rounded-lg font-['Jersey_10'] font-bold transition-all duration-300 hover:bg-orange-700"
+            className="py-2 px-6 bg-[#a65c1c] text-white rounded-lg font-['Jersey_10'] font-bold transition-all duration-300 hover:bg-[#8e4e18]"
             onClick={() => router.push("/signup")}
           >
             Create Account
