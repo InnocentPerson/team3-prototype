@@ -1,17 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export default function PermutationPage() {
+export default function MappingQuizPage() {
   const [n, setN] = useState("");
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [quizCount, setQuizCount] = useState(0);
-  const [showMappings, setShowMappings] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [quizStarted, setQuizStarted] = useState(false);
-  const [allPermutations, setAllPermutations] = useState<any[]>([]);
+  const [totalPermutations, setTotalPermutations] = useState<number>(0);
+  const [allMappings, setAllMappings] = useState<any[]>([]);
+  const [showPermutations, setShowPermutations] = useState(false);
 
   // Function to generate all permutations of an array
   const generatePermutations = (array: any[]) => {
@@ -30,28 +31,59 @@ export default function PermutationPage() {
     return results;
   };
 
+  // Function to shuffle the options array
+  const shuffleArray = (array: any[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+
   // Function to generate dynamic MCQ questions based on user input
   const generateQuizQuestions = (inputArray: number[]) => {
-    const randomizeArray = (array: number[]) => {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
-      }
-      return array;
+    let questions = [];
+
+    // Question 1: Total number of permutations
+    const totalPermutations = generatePermutations(inputArray).length;
+    setTotalPermutations(totalPermutations); // Store total permutations
+
+    const permutationsQuestion = {
+      question: "What is the total number of permutations possible for these numbers?",
+      options: [
+        totalPermutations, // Correct option
+        totalPermutations + 1, // Incorrect option
+        totalPermutations - 1, // Incorrect option
+        totalPermutations + 2, // Incorrect option
+      ],
+      correctAnswer: totalPermutations,
     };
 
-    let questions = [];
-    for (let i = 0; i < 5; i++) {
-      const domain = [...inputArray]; // Using user input for domain
-      const range = randomizeArray([...domain]); // Randomizing the range
-      const options = [
-        randomizeArray([...range]),
-        randomizeArray([...range]),
-        randomizeArray([...range]),
-        randomizeArray([...range]),
-      ];
-      questions.push({ mapping: domain, correctAnswer: range, options });
-    }
+    // Shuffle the options for permutations question
+    permutationsQuestion.options = shuffleArray(permutationsQuestion.options);
+
+    questions.push(permutationsQuestion);
+
+    // Question 2: Mapping question based on entered numbers
+    const mappingQuestion = {
+      question: "What is the correct mapping for the given elements?",
+      options: [
+        [inputArray[0], inputArray[1], inputArray[2]], // Correct mapping
+        [inputArray[1], inputArray[0], inputArray[2]], // Incorrect mapping
+        [inputArray[2], inputArray[0], inputArray[1]], // Incorrect mapping
+        [inputArray[2], inputArray[1], inputArray[0]], // Incorrect mapping
+      ],
+      correctAnswer: [inputArray[0], inputArray[1], inputArray[2]], // Correct mapping
+    };
+
+    // Shuffle the options for mapping question
+    mappingQuestion.options = shuffleArray(mappingQuestion.options);
+
+    questions.push(mappingQuestion);
+
+    // Set all possible mappings
+    setAllMappings(generatePermutations(inputArray));
+
     return questions;
   };
 
@@ -78,11 +110,10 @@ export default function PermutationPage() {
 
     setQuizQuestions(generateQuizQuestions(inputArray)); // Generate dynamic quiz questions based on input
     setQuizCount(0);
-    setShowMappings(false);
     setSelectedAnswer(""); // Reset selected answer
     setFeedback(null); // Reset feedback
     setQuizStarted(true); // Start the quiz when inputs are valid
-    setAllPermutations(generatePermutations(inputArray)); // Generate permutations for the input numbers
+    setShowPermutations(false); // Hide permutations initially
   };
 
   const handleAnswerSubmit = () => {
@@ -98,19 +129,19 @@ export default function PermutationPage() {
       setFeedback("Correct!");
     } else {
       setFeedback(
-        `Incorrect! The correct answer is: ${quizQuestions[quizCount].correctAnswer.join(" -> ")}`
+        `Incorrect! The correct answer is: ${JSON.stringify(quizQuestions[quizCount].correctAnswer)}`
       );
     }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextButton = () => {
     // Reset feedback and selected answer before moving to the next question
     setFeedback(null);
     setSelectedAnswer(""); // Reset selected answer for the next question
-    if (quizCount < 4) {
+    if (quizCount < 1) {
       setQuizCount(quizCount + 1); // Move to the next question
     } else {
-      setShowMappings(true); // After the last question, show all permutations
+      setShowPermutations(true); // Show permutations and mappings after both questions are answered
     }
   };
 
@@ -121,33 +152,13 @@ export default function PermutationPage() {
     }
   };
 
-  const handleRestartQuiz = () => {
-    setN("");
-    setInput("");
-    setError("");
-    setQuizQuestions([]);
-    setQuizCount(0);
-    setShowMappings(false);
-    setSelectedAnswer("");
-    setFeedback(null);
-    setQuizStarted(false);
-    setAllPermutations([]);
-  };
-
+  
   const handleGoBack = () => {
     setQuizStarted(false); // Go back to the first page of the quiz
     setN("");
     setInput("");
     setError("");
-    setAllPermutations([]); // Clear permutations when going back to home
-    setShowMappings(false); // Hide the mappings view
   };
-
-  useEffect(() => {
-    if (quizCount === 5) {
-      setShowMappings(true); // Show mappings and results after the last question
-    }
-  }, [quizCount]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#96a86c] to-[#5c6b47] p-6">
@@ -156,7 +167,7 @@ export default function PermutationPage() {
         {!quizStarted && (
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-center text-[#a65c1c] mb-4">
-              Permutation Mappings MCQ Quiz
+              Mapping and Permutation MCQ Quiz
             </h1>
 
             <div className="mb-4">
@@ -193,87 +204,87 @@ export default function PermutationPage() {
         )}
 
         {/* Quiz Section */}
-        {quizStarted && quizCount < 5 && !showMappings && (
+        {quizStarted && quizCount < 2 && !showPermutations && (
           <div className="flex-1">
             <h2 className="text-lg font-bold text-center mb-4 text-[#a65c1c]">
-              Mapping Question {quizCount + 1}
+              Question {quizCount + 1}
             </h2>
             <div className="space-y-4">
               <p className="text-center text-[#5c6b47] text-xl mb-6">
-                What is the correct mapping for: <br />
-                {quizQuestions[quizCount]?.mapping.join(" -> ")}
+                {quizQuestions[quizCount]?.question}
               </p>
 
               <div className="space-y-4">
-  {quizQuestions[quizCount]?.options.map((option: any[], idx: number) => (
-    <div
-      key={idx}
-      className="flex items-center p-4 rounded-md bg-[#e8f1d4] hover:bg-[#d6e5a8] cursor-pointer border-2 border-[#5c6b47] transition duration-300 shadow-lg"
-    >
-      <input
-        type="radio"
-        name="answer"
-        value={JSON.stringify(option)}
-        onChange={(e) => setSelectedAnswer(e.target.value)} // Update selected answer for this question
-        checked={selectedAnswer === JSON.stringify(option)} // Keep the selected answer checked
-        className="mr-4 w-6 h-6 accent-[#5c6b47]"
-      />
-      <span className="text-xl text-[#5c6b47]">{option.join(" -> ")}</span>
-    </div>
-  ))}
-</div>
+                {quizQuestions[quizCount]?.options.map((option: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="flex items-center p-4 rounded-md bg-[#e8f1d4] hover:bg-[#d6e5a8] cursor-pointer border-2 border-[#5c6b47] transition duration-300 shadow-lg justify-start"
+                  >
+                    <input
+                      type="radio"
+                      name="answer"
+                      value={JSON.stringify(option)}
+                      onChange={(e) => setSelectedAnswer(e.target.value)}
+                      checked={selectedAnswer === JSON.stringify(option)}
+                      className="w-4 h-4"
+                    />
+                    <span className="ml-2 text-[#5c6b47]">{JSON.stringify(option)}</span>
+                  </div>
+                ))}
+              </div>
 
+              {feedback && <p className="text-center text-red-500">{feedback}</p>}
 
-              {feedback && <p className="mt-2 text-sm text-[#a65c1c]">{feedback}</p>}
-
-              <button
-                onClick={handleAnswerSubmit}
-                className="w-full bg-[#5c6b47] text-white px-4 py-2 rounded-md mt-2 hover:bg-[#4b5e37] transition"
-              >
-                Submit Answer
-              </button>
-
-              <button
-                onClick={handleNextQuestion}
-                className="w-full bg-[#a65c1c] text-white px-4 py-2 rounded-md mt-2 hover:bg-[#a66c1c] transition"
-              >
-                Next Question
-              </button>
-
-              {quizCount > 0 && (
+              <div className="flex justify-between">
                 <button
                   onClick={handlePreviousQuestion}
-                  className="w-full bg-gray-500 text-white px-4 py-2 rounded-md mt-2 hover:bg-gray-600 transition"
+                  className="bg-[#5c6b47] text-white px-4 py-2 rounded-md hover:bg-[#a65c1c] transition"
                 >
                   Previous Question
                 </button>
-              )}
+
+                <button
+                  onClick={handleAnswerSubmit}
+                  className="bg-[#5c6b47] text-white px-4 py-2 rounded-md hover:bg-[#a65c1c] transition"
+                >
+                  Submit Answer
+                </button>
+
+                <button
+                  onClick={handleNextButton}
+                  className="bg-[#a65c1c] text-white px-4 py-2 rounded-md hover:bg-[#5c6b47] transition"
+                >
+                  Next 
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Mappings Section */}
-        {showMappings && (
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-center text-[#a65c1c] mb-4">
-              All Permutations (Mappings)
-            </h2>
-            <div className="space-y-4">
-              {allPermutations.map((perm, idx) => (
-                <p key={idx} className="text-center text-xl text-[#5c6b47]">
-                  {perm.join(" -> ")}
-                </p>
-              ))}
-            </div>
+        {/* Only show Permutations and Mappings when quiz has started */}
+{quizStarted && showPermutations && (
+  <div className="flex-1 space-y-4">
+    <h2 className="text-2xl font-bold text-[#a65c1c]">Permutations and Mappings</h2>
+    <div className="text-[#5c6b47]">
+      <h3 className="font-bold text-lg">All Possible Mappings:</h3>
+      <ul className="space-y-2">
+        {allMappings.map((mapping, idx) => (
+          <li key={idx}>
+            Mapping {idx + 1}: {JSON.stringify(mapping)}
+          </li>
+        ))}
+      </ul>
+    </div>
 
-            <button
-              onClick={handleGoBack}
-              className="w-full bg-[#a65c1c] text-white px-4 py-2 rounded-md mt-6 hover:bg-[#a66c1c] transition"
-            >
-              Go Back to Home
-            </button>
-          </div>
-        )}
+    <button
+      onClick={handleGoBack}
+      className="bg-[#a65c1c] text-white px-4 py-2 rounded-md w-full hover:bg-[#5c6b47] transition"
+    >
+      Go Back to Home
+    </button>
+  </div>
+)}
+
       </div>
     </div>
   );
