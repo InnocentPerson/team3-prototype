@@ -1,17 +1,24 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Path
 import mysql.connector as msql
 import os
 import dotenv
 from contextlib import asynccontextmanager
 from typing import List
 from logging import error
+from datetime import datetime
 
-from api.consts import STUDENT_NAME_FIELD, STUDENT_TABLE, STUDENT_EMAIL_FIELD, STUDENT_PASSWORD_FIELD
+from api.consts import (
+    STUDENT_NAME_FIELD,
+    STUDENT_TABLE,
+    STUDENT_EMAIL_FIELD,
+    STUDENT_PASSWORD_FIELD,
+)
 from api.models.login import LoginRequest, LoginResponse
 from api.models.logout import LogoutRequest, LogoutResponse
 from api.models.signup import SignupRequest, SignupResponse
 from api.models.student import Student
-from api.models.game import Game
+from api.models.game import Game, GameAttemptRequest
+from api.models.metrics import MetricsResponse
 from hashlib import sha256
 from random import randint
 
@@ -73,6 +80,7 @@ async def startup():
     await run_sql_script(create_script_path)
     await run_sql_script(insert_script_path)
 
+
 app.add_event_handler("startup", startup)
 
 
@@ -91,12 +99,14 @@ async def login(data: LoginRequest):
     async with get_db_connection() as db:
         with db.cursor() as cursor:
             query = f"SELECT * FROM {STUDENT_TABLE} WHERE {STUDENT_EMAIL_FIELD} = '{
-                data.email}' AND {STUDENT_PASSWORD_FIELD} = '{data.password}'"
+                data.email
+            }' AND {STUDENT_PASSWORD_FIELD} = '{data.password}'"
             cursor.execute(query)
             res = cursor.fetchall()
             if len(res) > 1 or len(res) == 0:
                 resp.error = f"No student found with credentials {
-                    data.email} authenticated with {data.password} found."
+                    data.email
+                } authenticated with {data.password} found."
                 return resp
 
     student = Student(email=data.email)
@@ -105,8 +115,9 @@ async def login(data: LoginRequest):
         return resp
 
     logged_in_students.add(student)
-    resp.response = f"Student with credentials {
-        data.email} authenticated with {data.password} logged in."
+    resp.response = f"Student with credentials {data.email} authenticated with {
+        data.password
+    } logged in."
     return resp
 
 
@@ -136,27 +147,34 @@ async def signup(data: SignupRequest):
 
     async with get_db_connection() as db:
         with db.cursor() as cursor:
-            query = f"SELECT * FROM {STUDENT_TABLE} WHERE {STUDENT_NAME_FIELD} = '{data.name}' AND {STUDENT_EMAIL_FIELD} = '{
-                data.email}' AND {STUDENT_PASSWORD_FIELD} = '{data.password}'"
+            query = f"SELECT * FROM {STUDENT_TABLE} WHERE {STUDENT_NAME_FIELD} = '{
+                data.name
+            }' AND {STUDENT_EMAIL_FIELD} = '{data.email}' AND {
+                STUDENT_PASSWORD_FIELD
+            } = '{data.password}'"
             cursor.execute(query)
             res = cursor.fetchall()
             if len(res) >= 1:
                 resp.error = f"Student already exists with {
-                    data.email} authenticated with {data.password}."
+                    data.email
+                } authenticated with {data.password}."
                 return resp
 
-            student_token = sha256(f"{data.name}{randint(
-                0, len(data.name))}".encode("utf-8")).hexdigest()
-            query = f"INSERT INTO {STUDENT_TABLE} VALUES ('{student_token}', '{data.name}', '{
-                data.email}', '{data.password}')"
+            student_token = sha256(
+                f"{data.name}{randint(0, len(data.name))}".encode("utf-8")
+            ).hexdigest()
+            query = f"INSERT INTO {STUDENT_TABLE} VALUES ('{student_token}', '{
+                data.name
+            }', '{data.email}', '{data.password}')"
             cursor.execute(query)
             db.commit()
 
     student = Student(email=data.email)
     logged_in_students.add(student)
 
-    resp.response = f"Student with email {
-        data.email} authenticated by {data.password} signed up."
+    resp.response = (
+        f"Student with email {data.email} authenticated by {data.password} signed up."
+    )
     resp.stoken = student_token
     return resp
 
@@ -171,6 +189,90 @@ async def get_games():
             if not games:
                 raise HTTPException(status_code=404, detail="No games found.")
             return games
+
+
+@app.get("/metrics/{stoken}", response_model=MetricsResponse)
+async def get_metrics(stoken: str = Path(..., description="Student's unique token")):
+    async with get_db_connection() as db:
+        with db.cursor(dictionary=True) as cursor:
+            query = """
+                SELECT 
+                    SToken AS stoken,
+                    TotalGamesAttempted AS total_games_attempted,
+                    TotalGamesCorrect AS total_games_correct,
+                    TotalPointsEarned AS total_points_earned,
+                    CASE WHEN TotalGamesAttempted > 0 
+                         THEN (TotalGamesCorrect * 100.0 / TotalGamesAttempted) 
+                         ELSE NULL 
+                    END AS success_rate,
+                    LastActive AS last_active
+                FROM METRICS
+                WHERE SToken = %s
+            """
+            cursor.execute(query, (stoken,))
+            metrics = cursor.fetchone()
+
+            if not metrics:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Metrics not found for the provided student token.",
+                )
+
+            return metrics
+
+
+@app.post("/game-attempt")
+async def log_game_attempt(data: GameAttemptRequest):
+    async with get_db_connection() as db:
+        with db.cursor() as cursor:
+            # Step 1: Insert into GAME_ATTEMPTS
+            timestamp = datetime.utcnow()
+            query_attempt = """
+                INSERT INTO GAME_ATTEMPTS (SToken, GId, Timestamp, GotCorrect)
+                VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(
+                query_attempt, (data.stoken, data.gid, timestamp, data.got_correct)
+            )
+
+            # Step 2: Update METRICS
+            update_metrics_query = """
+                UPDATE METRICS
+                SET 
+                    TotalGamesAttempted = TotalGamesAttempted + 1,
+                    TotalGamesCorrect = TotalGamesCorrect + %s,
+                    TotalPointsEarned = TotalPointsEarned + (
+                        SELECT CorrPoints FROM GAMES WHERE GId = %s
+                    ),
+                    LastActive = %s
+                WHERE SToken = %s
+            """
+            cursor.execute(
+                update_metrics_query,
+                (int(data.got_correct), data.gid, timestamp, data.stoken),
+            )
+            db.commit()
+
+    return {"message": "Game attempt logged and metrics updated successfully"}
+
+
+@app.post("/metrics/reset")
+async def reset_metrics(stoken: str):
+    async with get_db_connection() as db:
+        with db.cursor() as cursor:
+            query = """
+                UPDATE METRICS
+                SET 
+                    TotalGamesAttempted = 0,
+                    TotalGamesCorrect = 0,
+                    TotalPointsEarned = 0,
+                    LastActive = NULL
+                WHERE SToken = %s
+            """
+            cursor.execute(query, (stoken,))
+            db.commit()
+
+    return {"message": f"Metrics for student {stoken} reset successfully"}
 
 
 if __name__ == "__main__":
