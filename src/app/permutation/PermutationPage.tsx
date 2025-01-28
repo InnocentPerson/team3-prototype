@@ -1,7 +1,14 @@
 "use client";
+
 import { useState } from "react";
+import { gameAttempt, getMetrics } from "@/app/services/apiService";
+import { getUserData } from "@/app/utils/getUserData";
+
+// You stated GId=1 for the Permutation game
+const PERMUTATION_GAME_ID = 1;
 
 export default function MappingQuizPage() {
+  // Existing states for quiz logic
   const [n, setN] = useState("");
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
@@ -14,7 +21,13 @@ export default function MappingQuizPage() {
   const [allMappings, setAllMappings] = useState<any[]>([]);
   const [showPermutations, setShowPermutations] = useState(false);
 
-  // Function to generate all permutations of an array
+  // Additional states for metrics & final result
+  const [finalResult, setFinalResult] = useState<null | "passed" | "failed">(null);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [score, setScore] = useState(0);
+
+  // ==================== Utility Functions ====================
+
   const generatePermutations = (array: any[]) => {
     const results: any[] = [];
     const permute = (arr: any[], current: any[] = []) => {
@@ -31,7 +44,6 @@ export default function MappingQuizPage() {
     return results;
   };
 
-  // Function to shuffle the options array
   const shuffleArray = (array: any[]) => {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -40,52 +52,46 @@ export default function MappingQuizPage() {
     return array;
   };
 
-  // Function to generate dynamic MCQ questions based on user input
+  // ==================== Generate Quiz Questions ====================
   const generateQuizQuestions = (inputArray: number[]) => {
-    let questions = [];
+    const questions = [];
 
-    // Question 1: Total number of permutations
-    const totalPermutations = generatePermutations(inputArray).length;
-    setTotalPermutations(totalPermutations); // Store total permutations
+    // Q1: total permutations
+    const totalPerms = generatePermutations(inputArray).length;
+    setTotalPermutations(totalPerms);
 
     const permutationsQuestion = {
       question: "What is the total number of permutations possible for these numbers?",
-      options: [
-        totalPermutations, // Correct option
-        totalPermutations + 1, // Incorrect option
-        totalPermutations - 1, // Incorrect option
-        totalPermutations + 2, // Incorrect option
-      ],
-      correctAnswer: totalPermutations,
+      options: shuffleArray([
+        totalPerms,                // correct
+        totalPerms + 1,
+        totalPerms - 1,
+        totalPerms + 2,
+      ]),
+      correctAnswer: totalPerms,
     };
-
-    // Shuffle the options for permutations question
-    permutationsQuestion.options = shuffleArray(permutationsQuestion.options);
-
     questions.push(permutationsQuestion);
 
-    // Question 2: Mapping question based on entered numbers
+    // Q2: correct mapping
     const mappingQuestion = {
       question: "What is the correct mapping for the given elements?",
-      options: [
-        [inputArray[0], inputArray[1], inputArray[2]], // Correct mapping
-        [inputArray[1], inputArray[0], inputArray[2]], // Incorrect mapping
-        [inputArray[2], inputArray[0], inputArray[1]], // Incorrect mapping
-        [inputArray[2], inputArray[1], inputArray[0]], // Incorrect mapping
-      ],
-      correctAnswer: [inputArray[0], inputArray[1], inputArray[2]], // Correct mapping
+      options: shuffleArray([
+        [inputArray[0], inputArray[1], inputArray[2]], // correct
+        [inputArray[1], inputArray[0], inputArray[2]],
+        [inputArray[2], inputArray[0], inputArray[1]],
+        [inputArray[2], inputArray[1], inputArray[0]],
+      ]),
+      correctAnswer: [inputArray[0], inputArray[1], inputArray[2]],
     };
-
-    // Shuffle the options for mapping question
-    mappingQuestion.options = shuffleArray(mappingQuestion.options);
-
     questions.push(mappingQuestion);
 
-    // Set all possible mappings
+    // Also store all permutations
     setAllMappings(generatePermutations(inputArray));
 
     return questions;
   };
+
+  // ==================== Handlers for Starting & Navigating Quiz ====================
 
   const handleStartQuiz = () => {
     if (n.trim() === "" || isNaN(Number(n)) || Number(n) <= 0) {
@@ -108,12 +114,13 @@ export default function MappingQuizPage() {
       return;
     }
 
-    setQuizQuestions(generateQuizQuestions(inputArray)); // Generate dynamic quiz questions based on input
+    // Generate dynamic quiz
+    setQuizQuestions(generateQuizQuestions(inputArray));
     setQuizCount(0);
-    setSelectedAnswer(""); // Reset selected answer
-    setFeedback(null); // Reset feedback
-    setQuizStarted(true); // Start the quiz when inputs are valid
-    setShowPermutations(false); // Hide permutations initially
+    setSelectedAnswer("");
+    setFeedback(null);
+    setQuizStarted(true);
+    setShowPermutations(false);
   };
 
   const handleAnswerSubmit = () => {
@@ -121,49 +128,96 @@ export default function MappingQuizPage() {
       setFeedback("Please select an answer.");
       return;
     }
-
-    // Check the selected answer and provide feedback
+    // Check correctness
     const correct = selectedAnswer === JSON.stringify(quizQuestions[quizCount].correctAnswer);
-
     if (correct) {
       setFeedback("Correct!");
+      setScore((prev) => prev + 1);
     } else {
       setFeedback(
-        `Incorrect! The correct answer is: ${JSON.stringify(quizQuestions[quizCount].correctAnswer)}`
+        `Incorrect! The correct answer is: ${JSON.stringify(
+          quizQuestions[quizCount].correctAnswer
+        )}`
       );
     }
   };
 
   const handleNextButton = () => {
-    // Reset feedback and selected answer before moving to the next question
     setFeedback(null);
-    setSelectedAnswer(""); // Reset selected answer for the next question
+    setSelectedAnswer("");
     if (quizCount < 1) {
-      setQuizCount(quizCount + 1); // Move to the next question
+      setQuizCount((prev) => prev + 1);
     } else {
-      setShowPermutations(true); // Show permutations and mappings after both questions are answered
+      // after 2 Qs
+      setShowPermutations(true);
     }
   };
 
   const handlePreviousQuestion = () => {
-    // Navigate to the previous question
-    if (quizCount > 0) {
-      setQuizCount(quizCount - 1); // Move to the previous question
-    }
+    if (quizCount > 0) setQuizCount((prev) => prev - 1);
   };
 
-  
   const handleGoBack = () => {
-    setQuizStarted(false); // Go back to the first page of the quiz
+    setQuizStarted(false);
     setN("");
     setInput("");
     setError("");
   };
 
+  // ==================== Finishing Quiz & Updating Metrics ====================
+  const handleFinishQuiz = async () => {
+    // Example logic: user "passed" if they got both Qs correct
+    const passed = (score >= 2);
+    setFinalResult(passed ? "passed" : "failed");
+
+    // Log the attempt if logged in
+    const userData = getUserData();
+    if (userData?.stoken) {
+      try {
+        await gameAttempt(userData.stoken, PERMUTATION_GAME_ID, passed);
+        const updatedMetrics = await getMetrics(userData.stoken);
+        setMetrics(updatedMetrics);
+      } catch (err) {
+        console.error("Error logging attempt or fetching metrics:", err);
+      }
+    }
+  };
+
+  // ==================== Final Screen ====================
+  if (finalResult !== null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#96a86c] to-[#5c6b47] p-6">
+        <div className="bg-[#f7f2d8] shadow-lg rounded-lg p-6 max-w-md text-center">
+          <h1 className="text-2xl font-bold text-[#a65c1c] mb-4">Quiz Finished!</h1>
+          <p className="text-lg text-black">You {finalResult === "passed" ? "passed" : "did not pass"} the quiz.</p>
+
+          {metrics && (
+            <div className="mt-4 text-left">
+              <h2 className="text-lg font-bold">Your Latest Metrics:</h2>
+              <p>Total Attempts: {metrics.total_games_attempted}</p>
+              <p>Total Correct: {metrics.total_games_correct}</p>
+              <p>Total Points Earned: {metrics.total_points_earned}</p>
+              <p>Success Rate: {metrics.success_rate?.toFixed(2) ?? "N/A"}%</p>
+              <p>Last Active: {metrics.last_active}</p>
+            </div>
+          )}
+
+          <button
+            onClick={() => (window.location.href = "/")}
+            className="mt-4 px-4 py-2 bg-[#a65c1c] text-white rounded hover:bg-[#8e4e18]"
+          >
+            Return Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ==================== Normal Quiz UI ====================
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#96a86c] to-[#5c6b47] p-6">
       <div className="flex flex-col md:flex-row bg-[#f7f2d8] shadow-lg rounded-lg p-6 max-w-4xl w-full gap-6">
-        {/* Input Section */}
+        {/* ============ Input Section (before quiz starts) ============ */}
         {!quizStarted && (
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-center text-[#a65c1c] mb-4">
@@ -203,7 +257,7 @@ export default function MappingQuizPage() {
           </div>
         )}
 
-        {/* Quiz Section */}
+        {/* ============ Quiz Section (2 questions) ============ */}
         {quizStarted && quizCount < 2 && !showPermutations && (
           <div className="flex-1">
             <h2 className="text-lg font-bold text-center mb-4 text-[#a65c1c]">
@@ -240,51 +294,58 @@ export default function MappingQuizPage() {
                   onClick={handlePreviousQuestion}
                   className="bg-[#5c6b47] text-white px-4 py-2 rounded-md hover:bg-[#a65c1c] transition"
                 >
-                  Previous Question
+                  Previous
                 </button>
 
                 <button
                   onClick={handleAnswerSubmit}
                   className="bg-[#5c6b47] text-white px-4 py-2 rounded-md hover:bg-[#a65c1c] transition"
                 >
-                  Submit Answer
+                  Submit
                 </button>
 
                 <button
                   onClick={handleNextButton}
                   className="bg-[#a65c1c] text-white px-4 py-2 rounded-md hover:bg-[#5c6b47] transition"
                 >
-                  Next 
+                  Next
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Only show Permutations and Mappings when quiz has started */}
-{quizStarted && showPermutations && (
-  <div className="flex-1 space-y-4">
-    <h2 className="text-2xl font-bold text-[#a65c1c]">Permutations and Mappings</h2>
-    <div className="text-[#5c6b47]">
-      <h3 className="font-bold text-lg">All Possible Mappings:</h3>
-      <ul className="space-y-2">
-        {allMappings.map((mapping, idx) => (
-          <li key={idx}>
-            Mapping {idx + 1}: {JSON.stringify(mapping)}
-          </li>
-        ))}
-      </ul>
-    </div>
+        {/* ============ After Both Questions (Show Permutations) ============ */}
+        {quizStarted && showPermutations && (
+          <div className="flex-1 space-y-4">
+            <h2 className="text-2xl font-bold text-[#a65c1c]">Permutations & Mappings</h2>
+            <div className="text-[#5c6b47]">
+              <h3 className="font-bold text-lg">All Possible Mappings:</h3>
+              <ul className="space-y-2">
+                {allMappings.map((mapping, idx) => (
+                  <li key={idx}>
+                    Mapping {idx + 1}: {JSON.stringify(mapping)}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-    <button
-      onClick={handleGoBack}
-      className="bg-[#a65c1c] text-white px-4 py-2 rounded-md w-full hover:bg-[#5c6b47] transition"
-    >
-      Go Back to Home
-    </button>
-  </div>
-)}
+            {/* Finish Quiz Button */}
+            <button
+              onClick={handleFinishQuiz}
+              className="bg-[#a65c1c] text-white px-4 py-2 rounded-md w-full hover:bg-[#5c6b47] transition"
+            >
+              Finish Quiz
+            </button>
 
+            <button
+              onClick={handleGoBack}
+              className="bg-[#6b6b47] text-white px-4 py-2 rounded-md w-full hover:bg-[#4a4b27] transition"
+            >
+              Go Back to Start
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

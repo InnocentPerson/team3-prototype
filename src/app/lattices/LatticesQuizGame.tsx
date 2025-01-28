@@ -1,7 +1,9 @@
 "use client";
 
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import { useRouter } from "next/navigation";
+import { gameAttempt, getMetrics } from "@/app/services/apiService";
+import { getUserData } from "@/app/utils/getUserData";
 
 interface Question {
   id: number;
@@ -116,6 +118,8 @@ const questions: Question[] = [
   },
 ];
 
+const LATTICE_GAME_ID = 2;
+
 export default function LatticesQuizGame() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -127,6 +131,10 @@ export default function LatticesQuizGame() {
 
   // Once quizOver is true, we show the final results section
   const [quizOver, setQuizOver] = useState(false);
+
+  // Additional states for metrics
+  const [metrics, setMetrics] = useState<any>(null);
+  const [finalDone, setFinalDone] = useState(false);
 
   const router = useRouter();
   const currentQuestion = questions[currentQuestionIndex];
@@ -159,6 +167,22 @@ export default function LatticesQuizGame() {
     }
   };
 
+  useEffect(() => {
+    if (quizOver && !finalDone) {
+      setFinalDone(true); // To prevent repeated calls if re-render happens
+      const userData = getUserData();
+      if (userData?.stoken) {
+        // Decide "gotCorrect" logic: e.g. user passed if perfect score:
+        const gotCorrect = score === questions.length;
+
+        gameAttempt(userData.stoken, LATTICE_GAME_ID, gotCorrect)
+          .then(() => getMetrics(userData.stoken))
+          .then((m) => setMetrics(m))
+          .catch((err) => console.error("Lattices game attempt error:", err));
+      }
+    }
+  }, [quizOver, finalDone, score]);
+
   const handleRestartQuiz = () => {
     // Reset all states
     setCurrentQuestionIndex(0);
@@ -167,6 +191,10 @@ export default function LatticesQuizGame() {
     setIsAnswerCorrect(null);
     setQuestionAnswered(false);
     setQuizOver(false);
+
+    // Reset metrics
+    setMetrics(null);
+    setFinalDone(false);
   };
 
   const handleReturnHome = () => {
@@ -185,6 +213,19 @@ export default function LatticesQuizGame() {
             Your final score is <span className="font-bold">{score}</span> out of{" "}
             {questions.length}.
           </p>
+
+          {/* Display updated metrics if available */}
+          {metrics && (
+            <div className="mt-4 text-left bg-[#fff] p-3 rounded-md">
+              <h2 className="text-lg font-bold">Your Updated Metrics:</h2>
+              <p>Total Games Attempted: {metrics.total_games_attempted}</p>
+              <p>Total Games Correct: {metrics.total_games_correct}</p>
+              <p>Total Points Earned: {metrics.total_points_earned}</p>
+              <p>Success Rate: {metrics.success_rate?.toFixed(2) ?? "N/A"}%</p>
+              <p>Last Active: {metrics.last_active}</p>
+            </div>
+          )}
+
           <div className="flex gap-4">
             <button
               onClick={handleRestartQuiz}

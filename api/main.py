@@ -99,35 +99,43 @@ async def greet():
     return {"message": "Discreta says hello!!!"}
 
 
+# main.py (Only the login part shown with changes)
+
 @app.post("/login", response_model=LoginResponse)
 async def login(data: LoginRequest):
-    resp = LoginResponse(response=None, error=None)
+    resp = LoginResponse(response=None, error=None, stoken=None)
     if data.auth_token != auth_token:
         resp.error = "Auth token invalid."
         return resp
 
     async with get_db_connection() as db:
-        with db.cursor() as cursor:
-            query = f"SELECT * FROM {STUDENT_TABLE} WHERE {STUDENT_EMAIL_FIELD} = '{
-                data.email
-            }' AND {STUDENT_PASSWORD_FIELD} = '{data.password}'"
+        with db.cursor(dictionary=True) as cursor:
+            query = f"""
+                SELECT SToken 
+                FROM {STUDENT_TABLE} 
+                WHERE {STUDENT_EMAIL_FIELD} = '{data.email}'
+                AND {STUDENT_PASSWORD_FIELD} = '{data.password}'
+            """
             cursor.execute(query)
             res = cursor.fetchall()
-            if len(res) > 1 or len(res) == 0:
-                resp.error = f"No student found with credentials {
-                    data.email
-                } authenticated with {data.password} found."
+            if len(res) != 1:
+                resp.error = f"No unique student found for {data.email}"
                 return resp
 
+            # Extract stoken from the row
+            stoken_value = res[0]["SToken"]
+
+    # Check if student already logged in
     student = Student(email=data.email)
     if student in logged_in_students:
         resp.error = "Student already logged in."
         return resp
 
+    # Mark as logged in
     logged_in_students.add(student)
-    resp.response = f"Student with credentials {data.email} authenticated with {
-        data.password
-    } logged in."
+
+    resp.response = f"Student {data.email} logged in."
+    resp.stoken = stoken_value  # Return student's token
     return resp
 
 

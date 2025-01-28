@@ -5,6 +5,8 @@ import Link from "next/link";
 import DashboardCard from "./DashboardCard";
 import DashboardProgress from "./DashboardProgress";
 import DashboardAchievements from "./DashboardAchievements";
+import { getUserData } from "@/app/utils/getUserData";
+import { getMetrics } from "@/app/services/apiService";
 
 interface UserData {
   email: string;
@@ -14,6 +16,17 @@ interface UserData {
 }
 
 export default function DashboardPage() {
+  const [metrics, setMetrics] = useState<any>(null);
+
+  useEffect(() => {
+    const userData = getUserData();
+    if (userData?.stoken) {
+      getMetrics(userData.stoken)
+        .then((m) => setMetrics(m))
+        .catch((err) => console.error("Error fetching metrics:", err));
+    }
+  }, []);
+
   const [user, setUser] = useState<UserData | null>(null);
 
   // 1) Check if user data exists in localStorage
@@ -46,6 +59,8 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  
 
   // 4) Otherwise, the user is logged in. Render the dashboard content.
   return (
@@ -91,6 +106,20 @@ export default function DashboardPage() {
           link="/posets"
         />
       </section>
+
+      {/* Show metrics if available */}
+      {metrics && (
+        <div className="mt-6 p-4 bg-[#f7f2d8] rounded-lg shadow-md">
+          <h2 className="text-lg font-bold text-gray-800">Your Metrics</h2>
+          <ul className="mt-2 text-sm text-gray-600 space-y-1">
+            <li>Total Games Attempted: {metrics.total_games_attempted}</li>
+            <li>Total Games Correct: {metrics.total_games_correct}</li>
+            <li>Total Points Earned: {metrics.total_points_earned}</li>
+            <li>Success Rate: {metrics.success_rate?.toFixed(2) ?? "N/A"}%</li>
+            <li>Last Active: {metrics.last_active}</li>
+          </ul>
+        </div>
+      )}
 
       <DashboardProgress />
       <DashboardAchievements />

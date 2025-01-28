@@ -1,6 +1,6 @@
 from pydantic import BaseModel, field_validator
 from hashlib import sha256
-
+from typing import Optional
 
 class LoginRequest(BaseModel):
     auth_token: str
@@ -16,3 +16,4 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     response: str | None
     error: str | None
+    stoken: Optional[str] = None

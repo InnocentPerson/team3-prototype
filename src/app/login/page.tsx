@@ -13,17 +13,10 @@ function generateClientToken() {
  * After login, we store user data in localStorage.
  * 'expiry' is 7 days in ms
  */
-function storeLoginData(email: string, role: string) {
+function storeLoginData(email: string, role: string, stoken: string) {
   const token = generateClientToken();
-  const expiry = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days from now
-
-  const userData = {
-    email,
-    role,
-    token,
-    expiry,
-  };
-
+  const expiry = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+  const userData = { email, role, token, expiry, stoken };
   localStorage.setItem("userData", JSON.stringify(userData));
 }
 
@@ -36,33 +29,20 @@ export default function LoginPage() {
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Validate fields
     if (!email || !password) {
       alert("Please fill in all fields.");
       return;
     }
 
     try {
-      // Attempt login
       const response = await loginUser(email, password);
-      console.log("Login response:", response);
-      /**
-       * The server returns:
-       * {
-       *   response: string | null,
-       *   error: string | null
-       * }
-       */
+      // response = { response: string|null, error: string|null, stoken: string|null }
       if (response.error === null) {
-        // Success
         alert("Login successful!");
-        // Store user data in localStorage
-        storeLoginData(email, role);
-
-        // Then redirect the user
+        // store stoken in local storage
+        storeLoginData(email, role, response.stoken || "");
         router.push(`/dashboard`);
       } else {
-        // Login failed
         alert("Login failed: " + response.error);
       }
     } catch (error) {
