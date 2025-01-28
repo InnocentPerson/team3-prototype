@@ -89,8 +89,18 @@ CREATE TABLE IF NOT EXISTS METRICS (
     TotalGamesCorrect INT DEFAULT 0,
     TotalPointsEarned INT DEFAULT 0,
     LastActive DATETIME,
-    SuccessRate FLOAT GENERATED ALWAYS AS (TotalGamesCorrect * 100.0 / TotalGamesAttempted) STORED,
-    AveragePointsPerGame FLOAT GENERATED ALWAYS AS (TotalPointsEarned * 1.0 / TotalGamesAttempted) STORED,
+    SuccessRate FLOAT GENERATED ALWAYS AS (
+        CASE 
+            WHEN TotalGamesAttempted = 0 THEN 0 
+            ELSE (TotalGamesCorrect * 100.0 / TotalGamesAttempted) 
+        END
+    ) STORED,
+    AveragePointsPerGame FLOAT GENERATED ALWAYS AS (
+        CASE 
+            WHEN TotalGamesAttempted = 0 THEN 0 
+            ELSE (TotalPointsEarned * 1.0 / TotalGamesAttempted) 
+        END
+    ) STORED,
     PRIMARY KEY (SToken),
     FOREIGN KEY (SToken) REFERENCES STUDENT(SToken)
 );

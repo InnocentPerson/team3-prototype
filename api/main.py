@@ -203,11 +203,11 @@ async def get_metrics(stoken: str = Path(..., description="Student's unique toke
             query = """
                 SELECT 
                     SToken AS stoken,
-                    TotalGamesAttempted,
-                    TotalGamesCorrect,
-                    TotalPointsEarned,
+                    TotalGamesAttempted AS total_games_attempted,
+                    TotalGamesCorrect AS total_games_correct,
+                    TotalPointsEarned AS total_points_earned,
                     SuccessRate AS success_rate,
-                    LastActive
+                    LastActive AS last_active
                 FROM METRICS
                 WHERE SToken = %s
             """

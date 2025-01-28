@@ -216,13 +216,12 @@ export default function LatticesQuizGame() {
 
           {/* Display updated metrics if available */}
           {metrics && (
-            <div className="mt-4 text-left bg-[#fff] p-3 rounded-md">
+            <div className="mt-4 text-left bg-[#fff] p-3 rounded-md text-black mb-4">
               <h2 className="text-lg font-bold">Your Updated Metrics:</h2>
               <p>Total Games Attempted: {metrics.total_games_attempted}</p>
               <p>Total Games Correct: {metrics.total_games_correct}</p>
               <p>Total Points Earned: {metrics.total_points_earned}</p>
               <p>Success Rate: {metrics.success_rate?.toFixed(2) ?? "N/A"}%</p>
-              <p>Last Active: {metrics.last_active}</p>
             </div>
           )}
 

@@ -192,13 +192,12 @@ export default function MappingQuizPage() {
           <p className="text-lg text-black">You {finalResult === "passed" ? "passed" : "did not pass"} the quiz.</p>
 
           {metrics && (
-            <div className="mt-4 text-left">
-              <h2 className="text-lg font-bold">Your Latest Metrics:</h2>
+            <div className="mt-4 text-left text-[#5c6b47]">
+              <h2 className="text-lg font-bold text-gray-800">Your Latest Metrics:</h2>
               <p>Total Attempts: {metrics.total_games_attempted}</p>
               <p>Total Correct: {metrics.total_games_correct}</p>
               <p>Total Points Earned: {metrics.total_points_earned}</p>
               <p>Success Rate: {metrics.success_rate?.toFixed(2) ?? "N/A"}%</p>
-              <p>Last Active: {metrics.last_active}</p>
             </div>
           )}
 
