@@ -5,42 +5,45 @@ import AuthForm from "./AuthForm";
 import { signupUser } from "../services/apiService";
 
 const SignupPage = () => {
-  const [role, setRole] = useState("student"); // Default role is set to "student"
-  const [loading, setLoading] = useState(false); // Loading state for form submission
+  const [role, setRole] = useState("student"); // 'admin','professor','student'
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
-  const handleSignup = async (name: string, email: string, password: string) => {
-    if (loading) return; // Prevent multiple submissions while loading
-    setLoading(true); // Set loading state
-
-    // access auth_token from .env
-    // const AUTH_TOKEN = process.env.AUTH_TOKEN;
-    // console.log(AUTH_TOKEN);
-    const AUTH_TOKEN = "2eb3c12348258d673eb1514c92fe20dfe533cc0ad7863520444b5300072a91da";
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (loading) return;
+    if (!name || !email || !password) {
+      alert("Please fill all fields.");
+      return;
+    }
+    setLoading(true);
 
     try {
-      const response = await fetch("/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ AUTH_TOKEN, name, email, password }), // ,role removed for now
-      });
+      // Attempt signup
+      const response = await signupUser(name, email, password);
+      console.log("Signup response:", response);
+      // The server returns: { stoken, response, error }
 
-      if (response.ok) {
-        alert(`Signed up successfully as ${role}`);
-        router.push("/login"); // Redirect to login page after successful signup
+      if (response.error === null) {
+        alert("Signup successful! Your token is " + response.stoken);
+        // Optionally store stoken or auto-login. For now, redirect to login page:
+        router.push("/login");
       } else {
-        const data = await response.json();
-        alert(data.message || "Signup failed");
+        // Show the error
+        alert("Signup failed: " + response.error);
       }
     } catch (error) {
       console.error("Signup error:", error);
       alert("Something went wrong. Please try again.");
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative">
@@ -125,7 +128,42 @@ const SignupPage = () => {
         </h1>
 
         {/* Signup Form */}
-        <AuthForm onSubmit={handleSignup} buttonText={loading ? "Signing Up..." : "Sign Up"} />
+        <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Full Name"
+              className="w-full px-4 py-2 border rounded-lg"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div>
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full px-4 py-2 border rounded-lg"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full px-4 py-2 border rounded-lg"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 bg-[#8e4e18] text-white rounded-lg hover:bg-[#733c14] disabled:bg-gray-300"
+          >
+            {loading ? "Signing Up..." : "Sign Up"}
+          </button>
+        </form>
 
         <p className="text-center text-sm text-gray-600">
           Already have an account?{" "}

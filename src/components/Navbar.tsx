@@ -1,13 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { logoutUser } from "@/app/services/apiService"; // Adjust path if needed
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  const router = useRouter();
+
+  // Check localStorage for userData on mount
+  useEffect(() => {
+    const data = localStorage.getItem("userData");
+    if (data) {
+      const userData = JSON.parse(data);
+      if (Date.now() < userData.expiry) {
+        setIsLoggedIn(true);
+        setUserEmail(userData.email);
+      } else {
+        // session expired
+        localStorage.removeItem("userData");
+      }
+    }
+  }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);
+  };
+
+  // Handle logout: call logoutUser (optional) and clear localStorage
+  const handleLogout = async () => {
+    try {
+      if (userEmail) {
+        // Optionally call your logout endpoint
+        await logoutUser(userEmail);
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Clear local storage and update state
+      localStorage.removeItem("userData");
+      setIsLoggedIn(false);
+      setUserEmail(null);
+      router.push("/"); // or redirect somewhere else
+    }
   };
 
   return (
@@ -52,14 +91,28 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Right Side: Login/Signup */}
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            <Link
-              href="/login"
-              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#8e4e18]"
-            >
-              Login
-            </Link>
+          {/* Right Side */}
+          <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+            {isLoggedIn ? (
+              <>
+                <p className="text-sm font-light italic">
+                  Welcome, {userEmail}
+                </p>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#8e4e18]"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#8e4e18]"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -82,7 +135,12 @@ export default function Navbar() {
                   stroke="currentColor"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 8h16M4 16h16"
+                  />
                 </svg>
               )}
               {/* Icon when menu is open: X Mark */}
@@ -95,7 +153,12 @@ export default function Navbar() {
                   stroke="currentColor"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               )}
             </button>
@@ -106,6 +169,7 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="sm:hidden" id="mobile-menu">
+          {/* Links */}
           <div className="pt-2 pb-3 space-y-1">
             <Link
               href="/dashboard"
@@ -132,13 +196,28 @@ export default function Navbar() {
               Posets
             </Link>
           </div>
+          {/* Mobile Footer */}
           <div className="pt-4 pb-3 border-t border-[#8e4e18]">
-            <Link
-              href="/login"
-              className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium hover:bg-[#8e4e18] hover:border-white"
-            >
-              Login
-            </Link>
+            {isLoggedIn ? (
+              <div className="px-4 flex flex-col space-y-2">
+                <p className="text-white italic text-sm">
+                  Welcome, {userEmail}
+                </p>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium hover:bg-[#8e4e18] hover:border-white"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium hover:bg-[#8e4e18] hover:border-white"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}

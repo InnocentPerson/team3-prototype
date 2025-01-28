@@ -1,37 +1,73 @@
-"use client"; // Mark the file as a client component
+"use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // This works now in client component
-import { loginUser } from "../services/apiService"; // Using the service function
+import { useRouter } from "next/navigation";
+import { loginUser } from "../services/apiService";
 
-const LoginPage = () => {
-  const [role, setRole] = useState("student"); // Default role is student
-  const [email, setEmail] = useState(""); // Changed from username to email
+// Generate a pseudo-token (we're not receiving a real token from the backend)
+function generateClientToken() {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+/**
+ * After login, we store user data in localStorage.
+ * 'expiry' is 7 days in ms
+ */
+function storeLoginData(email: string, role: string) {
+  const token = generateClientToken();
+  const expiry = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days from now
+
+  const userData = {
+    email,
+    role,
+    token,
+    expiry,
+  };
+
+  localStorage.setItem("userData", JSON.stringify(userData));
+}
+
+export default function LoginPage() {
+  const [role, setRole] = useState("student");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (email && password && role) {
-      try {
-        const response = await loginUser(email, password, "2eb3c12348258d673eb1514c92fe20dfe533cc0ad7863520444b5300072a91da"); // Passing email, password, and empty auth_token
-        // console.log(env.AUTH_TOKEN)
-        console.log("Login response:", response);
-        if (response.token) {
-          alert("Login successful");
-          // Store the JWT token in localStorage or state
-          localStorage.setItem("token", response.token);
-          router.push(`/${role}`);  // Redirect based on role (e.g., admin, student, etc.)
-        } else {
-          alert("Login failed: " + (response.message || "Unknown error"));
-        }
-      } catch (error) {
-        console.log("Login error:", error);
-        alert("Something went wrong. Please try again.");
-      }
-    } else {
+    // Validate fields
+    if (!email || !password) {
       alert("Please fill in all fields.");
+      return;
+    }
+
+    try {
+      // Attempt login
+      const response = await loginUser(email, password);
+      console.log("Login response:", response);
+      /**
+       * The server returns:
+       * {
+       *   response: string | null,
+       *   error: string | null
+       * }
+       */
+      if (response.error === null) {
+        // Success
+        alert("Login successful!");
+        // Store user data in localStorage
+        storeLoginData(email, role);
+
+        // Then redirect the user
+        router.push(`/dashboard`);
+      } else {
+        // Login failed
+        alert("Login failed: " + response.error);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Something went wrong. Please try again.");
     }
   };
 
@@ -192,5 +228,3 @@ const LoginPage = () => {
     </div>
   );
 };
-
-export default LoginPage;
