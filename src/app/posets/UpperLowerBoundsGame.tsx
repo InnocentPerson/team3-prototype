@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import clsx from "clsx";
+import { getUserData } from "@/app/utils/getUserData";
+import { gameAttempt, getMetrics } from "@/app/services/apiService";
+
+const UPPER_LOWER_GAME_ID = 3;
 
 type BoundsQuestion = {
   set: number[];
@@ -58,6 +62,9 @@ export default function UpperLowerBoundsGame() {
   // Track if the current question was already answered correctly
   const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
 
+  const [gameOver, setGameOver] = useState(false);
+  const [metrics, setMetrics] = useState<any>(null);
+
   // Current question details
   const { set, subset, correctLUB, correctGLB, relation } = QUESTIONS[currentIndex];
 
@@ -84,7 +91,7 @@ export default function UpperLowerBoundsGame() {
     }
   };
 
-  const nextQuestion = () => {
+  const nextQuestion = async () => {
     setFeedback("");
     setLubGuess(null);
     setGlbGuess(null);
@@ -93,9 +100,43 @@ export default function UpperLowerBoundsGame() {
     if (currentIndex < QUESTIONS.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      setFeedback("No more questions! Great job!");
+      setGameOver(true);
+
+      const userData = getUserData();
+      if (userData?.stoken) {
+        try {
+          // For example, pass if score >= half the Qs
+          const gotCorrect = score >= Math.ceil(QUESTIONS.length / 2);
+          await gameAttempt(userData.stoken, UPPER_LOWER_GAME_ID, gotCorrect);
+          const updated = await getMetrics(userData.stoken);
+          setMetrics(updated);
+        } catch (err) {
+          console.error("UpperLower game attempt error:", err);
+        }
+      }
     }
   };
+
+  if (gameOver) {
+    return (
+      <div className="p-6 w-full">
+        <h2 className="text-2xl font-bold text-[#a65c1c] mb-4">
+          Upper &amp; Lower Bounds Game Completed
+        </h2>
+        <p className="mb-2">Final Score: {score} / {QUESTIONS.length}</p>
+
+        {metrics && (
+          <div className="bg-[#eee] p-3 rounded-md mt-4">
+            <h3 className="font-bold">Your Updated Metrics:</h3>
+            <p>Total Attempts: {metrics.total_games_attempted}</p>
+            <p>Total Games Correct: {metrics.total_games_correct}</p>
+            <p>Total Points Earned: {metrics.total_points_earned}</p>
+            <p>Success Rate: {metrics.success_rate?.toFixed(2) ?? "N/A"}%</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white/95 p-6 rounded-lg shadow-md">

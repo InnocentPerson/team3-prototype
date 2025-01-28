@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import clsx from "clsx";
+import { getUserData } from "@/app/utils/getUserData";
+import { gameAttempt, getMetrics } from "@/app/services/apiService";
+
+const MIN_MAX_GAME_ID = 3;
 
 type MinimalMaximalQuestion = {
   elements: number[];
@@ -47,6 +51,10 @@ export default function MinimalMaximalGame() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState("");
+
+  // End-of-game states
+  const [gameOver, setGameOver] = useState(false);
+  const [metrics, setMetrics] = useState<any>(null);
 
   // Track if we've already answered the current question correctly (to avoid double scoring).
   const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
@@ -99,7 +107,7 @@ export default function MinimalMaximalGame() {
     }
   };
 
-  const goToNextQuestion = () => {
+  const goToNextQuestion = async  () => {
     // Reset everything for the next question
     setSelectedMinimal([]);
     setSelectedMaximal([]);
@@ -108,11 +116,48 @@ export default function MinimalMaximalGame() {
 
     if (currentIndex < QUESTIONS.length - 1) {
       setCurrentIndex((prev) => prev + 1);
+    } if (currentIndex < QUESTIONS.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
     } else {
-      // We’re at the last question
-      setFeedback("No more questions available. Great job!");
+      // No more questions => gameOver
+      setGameOver(true);
+      // Let’s call gameAttempt & getMetrics
+      const userData = getUserData();
+      if (userData?.stoken) {
+        try {
+          // Example pass/fail: if score >= half the questions
+          const gotCorrect = score >= Math.ceil(QUESTIONS.length / 2);
+          await gameAttempt(userData.stoken, MIN_MAX_GAME_ID, gotCorrect);
+          const updated = await getMetrics(userData.stoken);
+          setMetrics(updated);
+        } catch (err) {
+          console.error("MinimalMaximal game attempt error:", err);
+        }
+      }
     }
   };
+
+   // ======================= Final Results Screen =======================
+   if (gameOver) {
+    return (
+      <div className="p-6 w-full">
+        <h2 className="text-2xl font-bold text-[#a65c1c] mb-4">
+          Minimal/Maximal Game Completed
+        </h2>
+        <p className="mb-2">Final Score: {score} / {QUESTIONS.length}</p>
+
+        {metrics && (
+          <div className="bg-[#eee] p-3 rounded-md mt-4">
+            <h3 className="font-bold">Your Updated Metrics:</h3>
+            <p>Total Attempts: {metrics.total_games_attempted}</p>
+            <p>Total Games Correct: {metrics.total_games_correct}</p>
+            <p>Total Points Earned: {metrics.total_points_earned}</p>
+            <p>Success Rate: {metrics.success_rate?.toFixed(2) ?? "N/A"}%</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white/95 p-6 rounded-lg shadow-md text-black">

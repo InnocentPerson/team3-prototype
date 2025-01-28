@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import clsx from "clsx";
+import { getUserData } from "@/app/utils/getUserData";
+import { gameAttempt, getMetrics } from "@/app/services/apiService";
+
+const LATTICE_VIS_GAME_ID = 3;
 
 export default function LatticeVisualizerGame() {
   // Single question scenario: top = {1,2}, bottom = ∅
@@ -38,6 +42,10 @@ export default function LatticeVisualizerGame() {
   // Prevent repeated scoring for the single question
   const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
 
+  // Final states
+  const [gameOver, setGameOver] = useState(false);
+  const [metrics, setMetrics] = useState<any>(null);
+
   const toggleNodeSelect = (id: string) => {
     setNodes((prev) =>
       prev.map((node) =>
@@ -64,6 +72,44 @@ export default function LatticeVisualizerGame() {
       setFeedback("Your bottom node selection is incorrect.");
     }
   };
+
+  const finishGame = async () => {
+    setGameOver(true);
+    const userData = getUserData();
+    if (userData?.stoken) {
+      try {
+        // Decide pass/fail. For example, pass if score>0
+        const gotCorrect = score > 0;
+        await gameAttempt(userData.stoken, LATTICE_VIS_GAME_ID, gotCorrect);
+        const updated = await getMetrics(userData.stoken);
+        setMetrics(updated);
+      } catch (err) {
+        console.error("LatticeVisualizer game attempt error:", err);
+      }
+    }
+  };
+
+  // If gameOver => final screen
+  if (gameOver) {
+    return (
+      <div className="p-6">
+        <h2 className="text-2xl font-bold text-[#a65c1c] mb-4">
+          Lattice Visualizer Completed
+        </h2>
+        <p className="mb-2">Score: {score}</p>
+
+        {metrics && (
+          <div className="bg-[#eee] p-3 rounded-md mt-4">
+            <h3 className="font-bold">Your Updated Metrics:</h3>
+            <p>Total Attempts: {metrics.total_games_attempted}</p>
+            <p>Total Games Correct: {metrics.total_games_correct}</p>
+            <p>Total Points Earned: {metrics.total_points_earned}</p>
+            <p>Success Rate: {metrics.success_rate?.toFixed(2) ?? "N/A"}%</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white/95 p-6 rounded-lg shadow-md">
@@ -164,9 +210,16 @@ export default function LatticeVisualizerGame() {
 
       <button
         onClick={checkAnswers}
-        className="px-4 py-2 bg-[#a65c1c] text-white rounded hover:bg-[#8e4e18]"
+        className="px-4 py-2 bg-[#a65c1c] text-white rounded hover:bg-[#8e4e18] mr-4"
       >
         Check Answers
+      </button>
+
+      <button
+        onClick={finishGame}
+        className="px-4 py-2 bg-[#a65c1c] text-white rounded hover:bg-[#8e4e18]"
+      >
+        Finish Game
       </button>
 
       {feedback && (
