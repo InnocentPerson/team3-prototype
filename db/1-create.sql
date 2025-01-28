@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS GAMES (
     GName VARCHAR(50) NOT NULL,
     GDescription VARCHAR(500),
     GDifficulty VARCHAR(10),
+    CorrPoints INTEGER,
     CONSTRAINT chk_games_difficulty CHECK (GDifficulty IN ('Easy', 'Medium', 'Hard'))
 );
 

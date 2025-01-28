@@ -98,9 +98,6 @@ app.add_event_handler("startup", startup)
 async def greet():
     return {"message": "Discreta says hello!!!"}
 
-
-# main.py (Only the login part shown with changes)
-
 @app.post("/login", response_model=LoginResponse)
 async def login(data: LoginRequest):
     resp = LoginResponse(response=None, error=None, stoken=None)
@@ -185,6 +182,8 @@ async def signup(data: SignupRequest):
                 data.name
             }', '{data.email}', '{data.password}')"
             cursor.execute(query)
+            insert_metrics_query = "INSERT INTO METRICS (SToken) VALUES (%s)"
+            cursor.execute(insert_metrics_query, (student_token,))
             db.commit()
 
     student = Student(email=data.email)
@@ -204,14 +203,11 @@ async def get_metrics(stoken: str = Path(..., description="Student's unique toke
             query = """
                 SELECT 
                     SToken AS stoken,
-                    TotalGamesAttempted AS total_games_attempted,
-                    TotalGamesCorrect AS total_games_correct,
-                    TotalPointsEarned AS total_points_earned,
-                    CASE WHEN TotalGamesAttempted > 0 
-                         THEN (TotalGamesCorrect * 100.0 / TotalGamesAttempted) 
-                         ELSE NULL 
-                    END AS success_rate,
-                    LastActive AS last_active
+                    TotalGamesAttempted,
+                    TotalGamesCorrect,
+                    TotalPointsEarned,
+                    SuccessRate AS success_rate,
+                    LastActive
                 FROM METRICS
                 WHERE SToken = %s
             """
@@ -241,7 +237,6 @@ async def log_game_attempt(data: GameAttemptRequest):
                 query_attempt, (data.stoken, data.gid, timestamp, data.got_correct)
             )
 
-            # Step 2: Update METRICS
             update_metrics_query = """
                 UPDATE METRICS
                 SET 
@@ -249,13 +244,13 @@ async def log_game_attempt(data: GameAttemptRequest):
                     TotalGamesCorrect = TotalGamesCorrect + %s,
                     TotalPointsEarned = TotalPointsEarned + (
                         SELECT CorrPoints FROM GAMES WHERE GId = %s
-                    ),
+                    ) * %s,
                     LastActive = %s
                 WHERE SToken = %s
             """
             cursor.execute(
                 update_metrics_query,
-                (int(data.got_correct), data.gid, timestamp, data.stoken),
+                (int(data.got_correct), data.gid, int(data.got_correct), timestamp, data.stoken),
             )
             db.commit()
 
