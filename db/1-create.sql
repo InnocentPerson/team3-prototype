@@ -81,3 +81,15 @@ CREATE TABLE IF NOT EXISTS GAME_ATTEMPTS (
     FOREIGN KEY fk_student_game_attempts_stoken (SToken) REFERENCES STUDENT(SToken),
     FOREIGN KEY fk_student_game_attempts_gid (GId) REFERENCES GAMES(GId)
 );
+
+CREATE TABLE IF NOT EXISTS METRICS (
+    SToken CHAR(64),
+    TotalGamesAttempted INT DEFAULT 0,
+    TotalGamesCorrect INT DEFAULT 0,
+    TotalPointsEarned INT DEFAULT 0,
+    LastActive DATETIME,
+    SuccessRate FLOAT GENERATED ALWAYS AS (TotalGamesCorrect * 100.0 / TotalGamesAttempted) STORED,
+    AveragePointsPerGame FLOAT GENERATED ALWAYS AS (TotalPointsEarned * 1.0 / TotalGamesAttempted) STORED,
+    PRIMARY KEY (SToken),
+    FOREIGN KEY (SToken) REFERENCES STUDENT(SToken)
+);
