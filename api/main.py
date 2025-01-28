@@ -189,18 +189,6 @@ async def signup(data: SignupRequest):
     return resp
 
 
-@app.get("/games", response_model=List[Game])
-async def get_games():
-    async with get_db_connection() as db:
-        with db.cursor(dictionary=True) as cursor:
-            query = "SELECT * FROM GAMES"
-            cursor.execute(query)
-            games = cursor.fetchall()
-            if not games:
-                raise HTTPException(status_code=404, detail="No games found.")
-            return games
-
-
 @app.get("/metrics/{stoken}", response_model=MetricsResponse)
 async def get_metrics(stoken: str = Path(..., description="Student's unique token")):
     async with get_db_connection() as db:
