@@ -1,85 +1,80 @@
+"use client";
+
 import Link from "next/link";
-// import styles from './page.module.css';
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <>
-      <div className="h-screen bg-gradient-to-b from-[#96a86c] to-[#5c6b47] flex items-center justify-center relative overflow-hidden">
-        <div className="container mx-auto px-6 z-10">
-          <div className="max-w-3xl mx-auto flex flex-col items-start">
-            {/* Title Section */}
-            <h1 className="text-6xl font-extrabold text-white leading-tight mb-6 jersey-10-regular drop-shadow-lg tracking-wider">
-              Discrete
-              <br />
-              Mathematical
-              <br />
-              Structures
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-100 to-green-300 p-6">
+      {/* Navbar */}
+      <nav className="flex justify-between items-center bg-white p-4 shadow-md rounded-lg">
+        <h1 className="text-xl font-semibold text-gray-800">EduPortal</h1>
+        <div className="flex space-x-4">
+          <Link href="/about" className="text-gray-700 hover:text-gray-900">About</Link>
+          <Link href="/features" className="text-gray-700 hover:text-gray-900">Features</Link>
+          <Link href="/contact" className="text-gray-700 hover:text-gray-900">Contact</Link>
+          <Link href="/login">
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Sign In</button>
+          </Link>
+        </div>
+      </nav>
 
-            {/* Subtitle Section */}
-            <p className="text-2xl text-[#e4c3a4] mb-8 jockey-one-regular drop-shadow-md tracking-wider">
-              Emphasizing your learning experience of{" "}
-              <span className="text-orange-500">
-                Lattices and Posets
-              </span>
-              ,<br />
-              through an engaging gameplay.
-            </p>
+      {/* Hero Section */}
+      <div className="text-center mt-16">
+        <h1 className="text-4xl font-extrabold text-gray-900">Welcome to Your Educational Portal</h1>
+        <p className="mt-2 text-gray-700">Access your courses, submit assignments, and view grades</p>
+      </div>
 
-            {/* CTA Button */}
-            <button className="bg-[#a65c1c] hover:bg-[#8e4e18] text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg jersey-10-regular tracking-wider">
-              <Link href="/dashboard">GET STARTED</Link>
+      {/* Student Login Card (Only Option Available) */}
+      <div className="flex justify-center mt-10">
+        <Link href="/login">
+          <div className="block bg-white shadow-lg p-6 rounded-lg text-center hover:shadow-xl w-96 cursor-pointer">
+            <span className="text-4xl">🎓</span>
+            <h3 className="text-lg font-bold mt-2 text-black">Student</h3>  {/* Made text black */}
+            <p className="text-sm text-gray-600">Access courses, submit assignments, and view grades</p>
+            <button className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+              Login as Student
             </button>
           </div>
-        </div>
+        </Link>
+      </div>
 
-        {/* Decorative Elements */}
-        <div className="absolute top-10 right-20 text-black text-4xl transform rotate-[10deg] font-bold">
-          x ∉ A
-        </div>
-        <div className="absolute bottom-10 right-20 text-black text-3xl font-bold">
-          f(x)
-        </div>
-        <div className="absolute top-5 left-10 text-black text-4xl font-bold transform rotate-[-20deg]">
-          f(x)
-        </div>
+      {/* Features Section */}
+      <div className="mt-16 text-center">
+        <h2 className="text-2xl font-bold text-gray-900">Platform Features</h2>
+        <p className="text-gray-600">Everything you need in one place.</p>
 
-        {/* Hexagonal Symbol */}
-        <div className="absolute top-1/3 right-1/4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-20 h-20 text-black"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 2l6.9 4v8l-6.9 4-6.9-4V6z"
-            />
-          </svg>
-        </div>
-
-        {/* Graph Illustration */}
-        <div className="absolute bottom-16 left-20">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-40 h-40 text-black"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          >
-            <circle cx="6" cy="6" r="1.5" fill="currentColor" />
-            <circle cx="18" cy="6" r="1.5" fill="currentColor" />
-            <circle cx="6" cy="18" r="1.5" fill="currentColor" />
-            <circle cx="18" cy="18" r="1.5" fill="currentColor" />
-            <path d="M6 6L18 18M6 18L18 6" />
-          </svg>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 max-w-6xl mx-auto">
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h3 className="font-semibold text-black">📊 Analytics Dashboard</h3>  {/* Made text black */}
+            <p className="text-sm text-gray-600">Track performance and progress in real-time</p>
+          </div>
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h3 className="font-semibold text-black">📅 Schedule Management</h3>  {/* Made text black */}
+            <p className="text-sm text-gray-600">Organize classes and assignments efficiently</p>
+          </div>
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h3 className="font-semibold text-black">💬 Communication Tools</h3>  {/* Made text black */}
+            <p className="text-sm text-gray-600">Stay connected with instant messaging</p>
+          </div>
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h3 className="font-semibold text-black">📚 Resource Library</h3>  {/* Made text black */}
+            <p className="text-sm text-gray-600">Access and share learning materials</p>
+          </div>
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h3 className="font-semibold text-black">📝 Assessment Tools</h3>  {/* Made text black */}
+            <p className="text-sm text-gray-600">Create and grade assignments easily</p>
+          </div>
+          <div className="bg-white p-4 shadow-md rounded-lg">
+            <h3 className="font-semibold text-black">🔒 Secure Access</h3>  {/* Made text black */}
+            <p className="text-sm text-gray-600">Role-based permissions and security</p>
+          </div>
         </div>
       </div>
-    </>
+
+      {/* Footer */}
+      <footer className="bg-white mt-16 p-6 text-center shadow-md">
+        <p className="text-gray-600">&copy; 2025 EduPortal. All rights reserved.</p>
+      </footer>
+    </div>
   );
 }
