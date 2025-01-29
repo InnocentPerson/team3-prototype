@@ -93,6 +93,13 @@ export default function Navbar() {
 
           {/* Right Side */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+            <Link
+              href="/learn-more" // New "Learn More" button
+              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#8e4e18]"
+            >
+              Learn More
+            </Link>
+
             {isLoggedIn ? (
               <>
                 <p className="text-sm font-light italic">
