@@ -74,7 +74,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # or ["*"] for all domains
+    allow_origins=["*"],  # or ["*"] for all domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -98,6 +98,7 @@ app.add_event_handler("startup", startup)
 async def greet():
     return {"message": "Discreta says hello!!!"}
 
+
 @app.post("/login", response_model=LoginResponse)
 async def login(data: LoginRequest):
     resp = LoginResponse(response=None, error=None, stoken=None)
@@ -108,8 +109,8 @@ async def login(data: LoginRequest):
     async with get_db_connection() as db:
         with db.cursor(dictionary=True) as cursor:
             query = f"""
-                SELECT SToken 
-                FROM {STUDENT_TABLE} 
+                SELECT SToken
+                FROM {STUDENT_TABLE}
                 WHERE {STUDENT_EMAIL_FIELD} = '{data.email}'
                 AND {STUDENT_PASSWORD_FIELD} = '{data.password}'
             """
@@ -190,7 +191,8 @@ async def signup(data: SignupRequest):
     logged_in_students.add(student)
 
     resp.response = (
-        f"Student with email {data.email} authenticated by {data.password} signed up."
+        f"Student with email {data.email} authenticated by {
+            data.password} signed up."
     )
     resp.stoken = student_token
     return resp
@@ -234,7 +236,8 @@ async def log_game_attempt(data: GameAttemptRequest):
                 VALUES (%s, %s, %s, %s)
             """
             cursor.execute(
-                query_attempt, (data.stoken, data.gid, timestamp, data.got_correct)
+                query_attempt, (data.stoken, data.gid,
+                                timestamp, data.got_correct)
             )
 
             update_metrics_query = """
@@ -250,7 +253,8 @@ async def log_game_attempt(data: GameAttemptRequest):
             """
             cursor.execute(
                 update_metrics_query,
-                (int(data.got_correct), data.gid, int(data.got_correct), timestamp, data.stoken),
+                (int(data.got_correct), data.gid, int(
+                    data.got_correct), timestamp, data.stoken),
             )
             db.commit()
 
