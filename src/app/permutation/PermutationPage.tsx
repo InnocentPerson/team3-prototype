@@ -74,7 +74,7 @@ export default function MappingQuizPage() {
 
     // Q2: correct mapping
     const mappingQuestion = {
-      question: "What is the correct mapping for the given elements?",
+      question: "What is the valid mapping for the given elements?",
       options: shuffleArray([
         [inputArray[0], inputArray[1], inputArray[2]], // correct
         [inputArray[1], inputArray[0], inputArray[2]],
