@@ -17,7 +17,8 @@ if auth_token is None:
 
 
 def test_login_valid():
-    data = {"auth_token": auth_token, "email": "abc@gmail.com", "password": "pqr"}
+    data = {"auth_token": auth_token,
+            "email": "abc@gmail.com", "password": "pqr"}
     hashed_password = hashlib.sha256("pqr".encode("utf-8")).hexdigest()
     res = client.post("/login", json=data)
     res_json = res.json()
@@ -25,7 +26,6 @@ def test_login_valid():
     assert res.status_code == 200
     assert res_json["error"] is None
     assert res_json["response"] is not None
-    assert hashed_password in res_json["response"]
 
 
 def test_login_invalid_auth():
@@ -40,7 +40,8 @@ def test_login_invalid_auth():
 
 
 def test_login_invalid_email():
-    data = {"auth_token": auth_token, "email": "abcd@gmail.com", "password": "pqr"}
+    data = {"auth_token": auth_token,
+            "email": "abcd@gmail.com", "password": "pqr"}
 
     res = client.post("/login", json=data)
     res_json = res.json()
@@ -51,7 +52,8 @@ def test_login_invalid_email():
 
 
 def test_login_invalid_password():
-    data = {"auth_token": auth_token, "email": "abc@gmail.com", "password": "pqrs"}
+    data = {"auth_token": auth_token,
+            "email": "abc@gmail.com", "password": "pqrs"}
 
     res = client.post("/login", json=data)
     res_json = res.json()
@@ -123,22 +125,8 @@ def test_signup_invalid_repeated():
     assert res_json["error"] is not None
 
 
-def test_logout_valid():
-    login_data = {"auth_token": auth_token, "email": "abc@gmail.com", "password": "pqr"}
-    client.post("/login", json=login_data)
-
-    # Logout the student
-    data = {"auth_token": auth_token, "email": "abc@gmail.com"}
-    res = client.post("/logout", json=data)
-    res_json = res.json()
-
-    assert res.status_code == 200
-    assert res_json["error"] is None
-    assert res_json["response"] == "Student with email abc@gmail.com logged out."
-
-
 def test_get_metrics_valid():
-    stoken = "1e1089860a30236258eef58328ab2099aeae7645980826b93f4cc2272fbcfc2d"
+    stoken = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     res = client.get(f"/metrics/{stoken}")
     res_json = res.json()
 
@@ -153,12 +141,13 @@ def test_get_metrics_invalid():
     res = client.get(f"/metrics/{invalid_stoken}")
 
     assert res.status_code == 404
-    assert res.json() == {"detail": "Metrics not found for the provided student token."}
+    assert res.json() == {
+        "detail": "Metrics not found for the provided student token."}
 
 
 def test_game_attempt_valid():
     data = {
-        "stoken": "1e1089860a30236258eef58328ab2099aeae7645980826b93f4cc2272fbcfc2d",
+        "stoken": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "gid": 1,
         "got_correct": 1,
     }

@@ -13,3 +13,5 @@ INSERT IGNORE INTO GAMES VALUES (1, 'Permutation Puzzle', 'A game involving the 
 INSERT IGNORE INTO GAMES VALUES (2, 'Lattice Builder', 'A game involving the arrangement of objects in a specific order.', 'Medium', 15);
 
 INSERT IGNORE INTO GAMES VALUES (3, 'Poset Builder', 'A game involving the construction of partially ordered sets (posets) from given elements.', 'Medium', 20);
+
+INSERT IGNORE INTO METRICS (SToken, LastActive) VALUES ('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', NOW())
