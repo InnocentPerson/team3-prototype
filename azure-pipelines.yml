@@ -1,0 +1,125 @@
+trigger:
+- main
+
+pool:
+  name: mohit
+  demands:
+    - Agent.Name -equals mohitk
+
+steps:
+- checkout: self
+
+# Install Node.js 14.x
+- task: NodeTool@0
+  inputs:
+    versionSpec: '14.x'
+  displayName: 'Install Node.js 14'
+
+# Clean npm cache, update npm, install dependencies
+- script: |
+    npm cache clean --force
+    npm install -g npm@latest
+    npm install
+  displayName: 'Clean cache, update npm, install dependencies'
+
+# Reset Dependency-Check database
+- powershell: |
+    $dcPath = if ($env:AGENT_OS -eq "Windows_NT") {
+        "$env:USERPROFILE\.dependency-check\data"
+    } else {
+        "$env:HOME/.dependency-check/data"
+    }
+    Write-Host "Purging Dependency-Check database at: $dcPath"
+    if (Test-Path $dcPath) {
+        Remove-Item -Path $dcPath -Recurse -Force -ErrorAction Stop
+        Write-Host "✅ Successfully purged database"
+    } else {
+        Write-Host "ℹ️ Database directory not found, nothing to purge"
+    }
+  displayName: 'Reset Dependency-Check Database'
+  condition: succeeded()
+
+# Set NVD API Key variable
+- powershell: |
+    $apiKey = "$(NVD_API_KEY)"
+    if (-not $apiKey) {
+        Write-Error "❌ NVD_API_KEY is not defined!"
+        exit 1
+    }
+    Write-Host "##vso[task.setvariable variable=_NVD_API_KEY;]$apiKey"
+  displayName: 'Resolve API Key Reference'
+  condition: succeeded()
+
+# Verify dependency-check CLI version
+- script: |
+    "C:\toolsDependencyCheck\dependency_path\dependency-check-12.1.0-release\dependency-check\bin\dependency-check.bat" --version
+  displayName: 'Verify Dependency-Check CLI (Full Path)'
+
+# Create output folder for reports
+- script: mkdir "$(Build.ArtifactStagingDirectory)/dependency-check-report"
+  displayName: 'Create Report Output Directory'
+
+# Run OWASP Dependency Check
+- task: CmdLine@2
+  displayName: 'Run OWASP Dependency Check (CLI)'
+  inputs:
+    script: |
+      "C:\toolsDependencyCheck\dependency_path\dependency-check-12.1.0-release\dependency-check\bin\dependency-check.bat" ^
+      --project "MyProject" ^
+      --scan "$(Build.SourcesDirectory)" ^
+      --format "HTML" ^
+      --out "$(Build.ArtifactStagingDirectory)\dependency-check-report" ^
+      --failOnCVSS 7 ^
+      --nvdApiKey $(NVD_API_KEY) ^
+      --disableAssembly ^
+      --disableYarnAudit
+
+# Publish the HTML report
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/dependency-check-report'
+    artifact: 'OWASPDependencyCheckReport'
+  displayName: 'Publish Dependency Check Report'
+
+# Publish JUnit test results (optional)
+- task: PublishTestResults@2
+  condition: always()
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/dependency-check-junit.xml'
+    searchFolder: '$(Build.ArtifactStagingDirectory)/dependency-check-report'
+    testRunTitle: 'OWASP Dependency Check'
+  displayName: 'Publish Dependency Check Test Results'
+
+# Run npm tests (optional)
+- script: npm test
+  displayName: 'Run Tests'
+  continueOnError: true
+
+# Clean npm cache before Docker build
+- script: npm cache clean --force
+  workingDirectory: '$(Build.SourcesDirectory)'
+  displayName: 'Clean npm cache before Docker build'
+
+# Build Docker image
+- task: Docker@2
+  displayName: 'Build Docker image'
+  inputs:
+    command: build
+    repository: team3-prototype
+    dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+    tags: |
+      $(Build.BuildId)
+      latest
+    containerRegistry: 'docker'
+
+# Push Docker image (optional)
+- task: Docker@2
+  displayName: 'Push Docker Image'
+  inputs:
+    command: push
+    repository: team3-prototype
+    tags: |
+      $(Build.BuildId)
+      latest
+    containerRegistry: 'docker'
