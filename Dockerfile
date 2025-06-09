@@ -1,7 +1,11 @@
-FROM node:14-alpine
+# Updated Dockerfile
+FROM node:14
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+# Fix: Clean cache and update npm before install
+RUN npm cache clean --force \
+    && npm install -g npm@latest \
+    && npm ci --only=production
 COPY . .
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
